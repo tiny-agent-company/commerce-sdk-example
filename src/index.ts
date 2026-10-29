@@ -1,11 +1,13 @@
-import Anthropic from '@anthropic-ai/sdk';
+import { anthropic } from '@ai-sdk/anthropic';
+import { isStepCount, streamText, type ModelMessage } from 'ai';
 import { AgentcardClient, buyTool, type BuyToolLink } from '@agent-cards/commerce-sdk';
 import * as readline from 'node:readline/promises';
 
-// A tiny terminal chat agent with Agentcard's buy tool.
-const anthropic = new Anthropic();
+// A tiny terminal chat agent with Agentcard's buy tool, on the Vercel AI SDK.
+// Any AI SDK model works here; swap the provider and the model id.
+const model = anthropic('claude-sonnet-5-5');
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-let history: Anthropic.Beta.BetaMessageParam[] = [];
+let history: ModelMessage[] = [];
 
 const agentcard = new AgentcardClient({
   clientId: process.env.AGENTCARD_CLIENT_ID ?? '',
@@ -46,20 +48,16 @@ while (true) {
     },
   });
   try {
-    const runner = anthropic.beta.messages.toolRunner({
-      model: 'claude-sonnet-5-5',
-      max_tokens: 1024,
-      tools: [turn],
-      messages: turn.messages(history),
-      stream: true,
-    });
-    for await (const stream of runner) {
-      const paragraphs = turn.messageStream();
-      stream.on('text', (delta) => paragraphs.push(delta));
-      await stream.done();
-      await paragraphs.end();
+    const messages = turn.messages(history);
+    // The turn is the tool: the AI SDK runs each call, and each step's words go out paragraph by paragraph.
+    const result = streamText({ model, tools: { buy: turn }, messages, stopWhen: isStepCount(5) });
+    let paragraphs: ReturnType<typeof turn.messageStream> | null = null;
+    for await (const part of result.fullStream) {
+      if (part.type === 'start-step') paragraphs = turn.messageStream();
+      else if (part.type === 'text-delta') paragraphs?.push(part.text);
+      else if (part.type === 'finish-step') await paragraphs?.end();
     }
-    history = runner.params.messages;
+    history = [...messages, ...(await result.response).messages];
   } catch (error) {
     turn.end();
     if (!turn.stopped) console.log(`agent: (the turn failed: ${(error as Error).message})`);

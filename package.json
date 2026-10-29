@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "@agent-cards/commerce-sdk": "^0.18.4",
-    "@anthropic-ai/sdk": "^0.68.0"
+    "@ai-sdk/anthropic": "^4.0.92",
+    "ai": "^7.0.157"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

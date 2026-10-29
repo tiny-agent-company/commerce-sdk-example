@@ -2,11 +2,11 @@
 
 A terminal chat agent that buys from real stores with the [Agentcard Commerce SDK](https://www.npmjs.com/package/@agent-cards/commerce-sdk). Ask it for something, and it searches stores, builds a cart and checks out. Your shopper adds a card once in the Agentcard Vault and approves each purchase.
 
-It's one file, [`src/index.ts`](src/index.ts): an Anthropic chat loop with Agentcard's buy tool.
+It's one file, [`src/index.ts`](src/index.ts): a [Vercel AI SDK](https://ai-sdk.dev) chat loop with Agentcard's buy tool. It runs on Claude through `@ai-sdk/anthropic`; swap in any AI SDK provider and model.
 
 ## Run it
 
-You need Node 22 or later, an Anthropic API key and your company's Agentcard credentials.
+You need Node 22 or later, an Anthropic API key (or another AI SDK provider's) and your company's Agentcard credentials.
 
 ```bash
 git clone https://github.com/tiny-agent-company/commerce-sdk-example
@@ -29,7 +29,8 @@ To get your Agentcard client ID and secret, run `npx agent-cards credentials`. P
 
 - **One client:** `new AgentcardClient({ clientId, clientSecret })`.
 - **One buy tool per shopper:** `buyTool({ agentcard, externalUserId })`, kept between messages.
-- **Each message is a turn:** `buy.turn(text)` is the tool the model calls, passed as `tools: [turn]` with `turn.messages(history)`.
+- **Each message is a turn:** `buy.turn(text)` is the tool the model calls, passed to `streamText` as `tools: { buy: turn }` with `messages: turn.messages(history)`. The AI SDK runs each call.
+- **Streaming:** each step's text goes through `turn.messageStream()`, so the shopper gets one message per paragraph, with step links right after the message that asks for them.
 - **Messages between turns:** `agentcard.listen()` prints card saved, order placed and approval notices without a webhook.
 - **Links:** product and store cards print with the words that pick them. Add a card, approve the payment and store sign-in print as links to open in your browser.
 
