@@ -1,0 +1,20 @@
+{
+  "name": "commerce-sdk-example",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A terminal chat agent that buys from real stores with the Agentcard Commerce SDK",
+  "type": "module",
+  "scripts": {
+    "start": "node --env-file=.env --import tsx src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@agent-cards/commerce-sdk": "^0.18.4",
+    "@anthropic-ai/sdk": "^0.68.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}
