@@ -16,7 +16,8 @@ const agentcard = new AgentcardClient({
 });
 
 // One shopper in this terminal: one stable id, one buy tool, kept.
-const shopperId = process.env.SHOPPER_ID ?? 'terminal-user';
+// An empty SHOPPER_ID= line (as in .env.example) means the default too.
+const shopperId = process.env.SHOPPER_ID || 'terminal-user';
 const buy = buyTool({ agentcard, externalUserId: shopperId, ack: 'text' });
 
 // One model run at a time, in order: a shopper message and a step taken for them never write history over each other.
